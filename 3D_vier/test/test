@@ -1,0 +1,513 @@
+#include "../../parsing.h"
+#include "../doing.h"
+#include <check.h>
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+#test S21_PARS_001
+int sumPoints = 0;
+int sumLines = 0;
+float** points = NULL;
+int** LINES = NULL;
+char* filePath = "";
+int parsError = parsing_xyz(points, LINES, &sumPoints, &sumLines, filePath);
+ck_assert_int_eq(parsError, 1);
+
+#test S21_PARS_002
+int sumPoints = 0;
+int sumLines = 0;
+float** points = NULL;
+int** LINES = NULL;
+char*  filePath = "3D_vier/test/testEmpty.obj";
+int parsError = parsing_xyz(points, LINES, &sumPoints, &sumLines, filePath);
+ck_assert_int_eq(parsError, 2);
+
+#test S21_PARS_003
+int sumPoints = 5;
+int sumLines = 3;
+float** points = NULL;
+int** LINES = NULL;
+char*  filePath = "3D_vier/test/testEmpty.obj";
+int parsError = parsing_xyz(points, LINES, &sumPoints, &sumLines, filePath);
+ck_assert_int_eq(parsError, 2);
+ck_assert_int_eq(sumPoints, 0);
+ck_assert_int_eq(sumLines, 0);
+
+#test S21_PARS_004
+int sumPoints = 0;
+int sumLines = 0;
+float** points = calloc(256, sizeof(float*));
+for (int i = 0; i < 256; i++) points[i] = calloc(256, sizeof(float));
+int** LINES = calloc(256, sizeof(int*));
+for (int i = 0; i < 256; i++) LINES[i] = calloc(256, sizeof(int));
+char* filePath = "3D_vier/test/verte.obj";
+int parsError = parsing_xyz(points, LINES, &sumPoints, &sumLines, filePath);
+ck_assert_int_eq(sumLines, 9);
+ck_assert_int_eq(sumPoints, 0);
+ck_assert_int_eq(parsError, 2);
+for (int i = 0; i < 256; i++) {
+  free(points[i]);
+  free(LINES[i]);
+}
+free(points);
+free(LINES);
+
+#test S21_PARS_005
+int sumPoints = 0;
+int sumLines = 0;
+float** points = calloc(256, sizeof(float*));
+for (int i = 0; i < 256; i++) points[i] = calloc(256, sizeof(float));
+int** LINES = calloc(256, sizeof(int*));
+for (int i = 0; i < 256; i++) LINES[i] = calloc(256, sizeof(int));
+char*  filePath = "3D_vier/test/points.obj";
+int parsError = parsing_xyz(points, LINES, &sumPoints, &sumLines, filePath);
+ck_assert_int_eq(sumPoints, 2);
+ck_assert_int_eq(sumLines, 0);
+ck_assert_int_eq(parsError, 2);
+for (int i = 0; i < 256; i++) {
+  free(points[i]);
+  free(LINES[i]);
+}
+free(points);
+free(LINES);
+
+#test S21_PARS_006
+int sumPoints = 0;
+int sumLines = 0;
+float** points = calloc(256, sizeof(float*));
+for (int i = 0; i < 256; i++) points[i] = calloc(256, sizeof(float));
+int** LINES = calloc(256, sizeof(int*));
+for (int i = 0; i < 256; i++) LINES[i] = calloc(256, sizeof(int));
+char*  filePath = "3D_vier/test/Pyramid.obj";
+int parsError = parsing_xyz(points, LINES, &sumPoints, &sumLines, filePath);
+ck_assert_int_eq(parsError, 0);
+ck_assert_int_eq(sumPoints, 6);
+ck_assert_int_eq(sumLines, 24);
+for (int i = 0; i < 256; i++) {
+  free(points[i]);
+  free(LINES[i]);
+}
+free(points);
+free(LINES);
+
+#test S21_COUNT_001
+int sumPoints = 0;
+int sumLines = 0;
+char* filePath = "";
+int parsError = points_and_lines_counter(&sumPoints, &sumLines, filePath);
+ck_assert_int_eq(parsError, 1);
+
+#test S21_COUNT_002
+int sumPoints = 0;
+int sumLines = 0;
+char*  filePath = "3D_vier/test/testEmpty.obj";
+int parsError = points_and_lines_counter(&sumPoints, &sumLines, filePath);
+ck_assert_int_eq(parsError, 2);
+
+#test S21_COUNT_003
+int sumPoints = 5;
+int sumLines = 3;
+char*  filePath = "3D_vier/test/testEmpty.obj";
+int parsError = points_and_lines_counter(&sumPoints, &sumLines, filePath);
+ck_assert_int_eq(parsError, 2);
+ck_assert_int_eq(sumPoints, 0);
+ck_assert_int_eq(sumLines, 0);
+
+#test S21_COUNT_004
+int sumPoints = 0;
+int sumLines = 0;
+char* filePath = "3D_vier/test/verte.obj";
+int parsError = points_and_lines_counter(&sumPoints, &sumLines, filePath);
+ck_assert_int_eq(sumLines, 9);
+ck_assert_int_eq(sumPoints, 0);
+ck_assert_int_eq(parsError, 2);
+
+#test S21_COUNT_005
+int sumPoints = 0;
+int sumLines = 0;
+char*  filePath = "3D_vier/test/points.obj";
+int parsError = points_and_lines_counter(&sumPoints, &sumLines, filePath);
+ck_assert_int_eq(sumPoints, 2);
+ck_assert_int_eq(sumLines, 0);
+ck_assert_int_eq(parsError, 2);
+
+#test S21_COUNT_006
+int sumPoints = 0;
+int sumLines = 0;
+char*  filePath = "3D_vier/test/Pyramid.obj";
+int parsError = points_and_lines_counter(&sumPoints, &sumLines, filePath);
+ck_assert_int_eq(sumPoints, 6);
+ck_assert_int_eq(sumLines, 24);
+ck_assert_int_eq(parsError, 0);
+
+#test S21_TEST_CASE_0
+ int lines_counter = 0;
+ char str3[5] = "f \n";
+ int** LINES = calloc(1, sizeof(int*));
+ LINES[0] = calloc(2, sizeof(int));
+ string_to_line(str3, LINES, &lines_counter);
+ ck_assert_float_eq(LINES[0][0], 0.0);
+ ck_assert_float_eq(lines_counter, 0);
+ free(LINES[0]);
+ free (LINES);
+
+#test S21_TEST_CASE_1
+  float maximum = 0;
+  float *  points = calloc(100, sizeof(float));
+  char str1[100] = "v 1 2 3\n";
+  string_to_XYZ(str1, points, &maximum);
+  float origin0 = 1;
+  float origin1 = 2;
+  float origin2 = 3;
+  ck_assert_float_eq(points[0], origin0);
+  ck_assert_float_eq(points[1], origin1);
+  ck_assert_float_eq(points[2], origin2);
+  free(points);
+
+#test S21_TEST_CASE_2
+  float maximum = 0;
+  float *  points = calloc(100, sizeof(float));
+    char str2[100] = "v 1.1 10 3.3\n";
+  float origin00 = 1.1;
+  float origin01 = 10;
+  float origin02 = 3.3;
+  string_to_XYZ(str2, points, &maximum);
+  ck_assert_float_eq(points[0], origin00);
+  ck_assert_float_eq(points[1], origin01);
+  ck_assert_float_eq(points[2], origin02);
+   free(points);
+
+#test S21_TEST_CASE_3
+    float maximum = 0;
+  float *  points = calloc(100, sizeof(float));
+  char str2[100] = "v 1.1 2.2 3.4\n";
+  float origin1 = 1.1;
+  float origin2 = 2.2;
+  float origin3 = 3.4;
+  string_to_XYZ(str2, points, &maximum);
+  ck_assert_float_eq(points[0], origin1);
+  ck_assert_float_eq(points[1], origin2);
+  ck_assert_float_eq(points[2], origin3);
+   free(points);
+
+#test S21_TEST_CASE_4
+ int lines_counter = 0;
+ char str3[100] = "f 1 4 5\n";
+ int **  LINES = calloc(20, sizeof(int*));
+ int ** LINES_origin = calloc(20, sizeof(int*));
+  for (int i = 0 ; i< 20 ; i++){
+    LINES[i] = (int *)malloc(2*sizeof(int));
+    LINES_origin[i] = (int *)malloc(2*sizeof(int));
+  }
+ LINES_origin[0][0] = 1;
+ LINES_origin[0][1] = 4;
+ LINES_origin[1][0] = 4;
+ LINES_origin[1][1] = 5;
+ LINES_origin[2][0] = 5;
+ LINES_origin[2][1] = 1;
+ int lines_counter_origin = 3;
+ string_to_line(str3, LINES, &lines_counter);
+  ck_assert_float_eq(LINES[0][0], LINES_origin[0][0]);
+  ck_assert_float_eq(LINES[0][1], LINES_origin[0][1]);
+  ck_assert_float_eq(LINES[1][0], LINES_origin[1][0]);
+  ck_assert_float_eq(LINES[1][1], LINES_origin[1][1]);
+  ck_assert_float_eq(LINES[2][0], LINES_origin[2][0]);
+  ck_assert_float_eq(LINES[2][1], LINES_origin[2][1]);
+  ck_assert_float_eq(lines_counter, lines_counter_origin);
+  for (int i = 0 ; i< 20 ; i++){
+    free(LINES[i]);
+    free(LINES_origin[i]);
+  }
+  free (LINES);
+  free(LINES_origin);
+
+#test S21_TEST_CASE_5
+ int lines_counter = 0;
+ char str3[100] = "f 1 4 5 6 7\n";
+ int **  LINES = calloc(20, sizeof(int*));
+ int ** LINES_origin = calloc(20, sizeof(int*));
+  for (int i = 0 ; i< 20 ; i++){
+    LINES[i] = (int *)malloc(2*sizeof(int));
+    LINES_origin[i] = (int *)malloc(2*sizeof(int));
+  }
+ LINES_origin[0][0] = 1;
+ LINES_origin[0][1] = 4;
+ LINES_origin[1][0] = 4;
+ LINES_origin[1][1] = 5;
+ LINES_origin[2][0] = 5;
+ LINES_origin[2][1] = 6;
+ LINES_origin[3][0] = 6;
+ LINES_origin[3][1] = 7;
+ LINES_origin[4][0] = 7;
+ LINES_origin[4][1] = 1;
+ int lines_counter_origin = 5;
+ string_to_line(str3, LINES, &lines_counter);
+  ck_assert_float_eq(LINES[0][0], LINES_origin[0][0]);
+  ck_assert_float_eq(LINES[0][1], LINES_origin[0][1]);
+  ck_assert_float_eq(LINES[1][0], LINES_origin[1][0]);
+  ck_assert_float_eq(LINES[1][1], LINES_origin[1][1]);
+  ck_assert_float_eq(LINES[2][0], LINES_origin[2][0]);
+  ck_assert_float_eq(LINES[2][1], LINES_origin[2][1]);
+  ck_assert_float_eq(LINES[3][0], LINES_origin[3][0]);
+  ck_assert_float_eq(LINES[3][1], LINES_origin[3][1]);
+  ck_assert_float_eq(LINES[4][0], LINES_origin[4][0]);
+  ck_assert_float_eq(LINES[4][1], LINES_origin[4][1]);
+  ck_assert_float_eq(lines_counter, lines_counter_origin);
+  for (int i = 0 ; i< 20 ; i++){
+    free(LINES[i]);
+    free(LINES_origin[i]);
+  }
+  free (LINES);
+  free(LINES_origin);
+
+#test S21_TEST_CASE_6
+ int lines_counter = 0;
+ char str3[100] = "f 1//3 3 5 100 7\n";
+ int **  LINES = calloc(20, sizeof(int*));
+ int ** LINES_origin = calloc(20, sizeof(int*));
+  for (int i = 0 ; i< 20 ; i++){
+    LINES[i] = (int *)malloc(2*sizeof(int));
+    LINES_origin[i] = (int *)malloc(2*sizeof(int));
+  }
+ LINES_origin[0][0] = 1;
+ LINES_origin[0][1] = 3;
+ LINES_origin[1][0] = 3;
+ LINES_origin[1][1] = 5;
+ LINES_origin[2][0] = 5;
+ LINES_origin[2][1] = 100;
+ LINES_origin[3][0] = 100;
+ LINES_origin[3][1] = 7;
+ LINES_origin[4][0] = 7;
+ LINES_origin[4][1] = 1;
+ int lines_counter_origin = 5;
+ string_to_line(str3, LINES, &lines_counter);
+  ck_assert_float_eq(LINES[0][0], LINES_origin[0][0]);
+  ck_assert_float_eq(LINES[0][1], LINES_origin[0][1]);
+  ck_assert_float_eq(LINES[1][0], LINES_origin[1][0]);
+  ck_assert_float_eq(LINES[1][1], LINES_origin[1][1]);
+  ck_assert_float_eq(LINES[2][0], LINES_origin[2][0]);
+  ck_assert_float_eq(LINES[2][1], LINES_origin[2][1]);
+  ck_assert_float_eq(LINES[3][0], LINES_origin[3][0]);
+  ck_assert_float_eq(LINES[3][1], LINES_origin[3][1]);
+  ck_assert_float_eq(LINES[4][0], LINES_origin[4][0]);
+  ck_assert_float_eq(LINES[4][1], LINES_origin[4][1]);
+  ck_assert_float_eq(lines_counter, lines_counter_origin);
+  for (int i = 0 ; i< 20 ; i++){
+    free(LINES[i]);
+    free(LINES_origin[i]);
+  }
+  free (LINES);
+  free(LINES_origin);
+
+#test S21_TEST_CASE_7
+ float *  A = calloc(4, sizeof(float));
+ float *  B = calloc(16, sizeof(float));
+ float *  C = calloc(4, sizeof(float));
+ float *  origin = calloc(4, sizeof(float));
+  B[0] = 1;
+  B[1] = 1;
+  B[2] = 6;
+  B[3] = 0.1;
+  B[4] = 12;
+  B[5] = 213;
+  B[6] = 4;
+  B[7] = 4;
+  B[8] = 5.2;
+  B[9] = 34;
+  B[10] = 8.88;
+  B[11] = 5;
+  B[12] = 7;
+  B[13] = 4;
+  B[14] = 0;
+  B[15] = 1;
+  A[0] = 14;
+  A[1] = 154;
+  A[2] = 0;
+  A[3] = 1;
+  origin[0] = 1869;
+  origin[1] = 32820;
+  origin[2] = 700;
+  origin[3] = 618.4;
+  multm_matrix(A, 1, B, C);
+  ck_assert_float_eq(origin[0], C[0]);
+  ck_assert_float_eq(origin[1], C[1]);
+  ck_assert_float_eq(origin[2], C[2]);
+  ck_assert_float_eq(origin[3], C[3]);
+  free(A);
+  free(B);
+  free(C);
+  free(origin);
+
+#test S21_TEST_CASE_8
+  int sum_lines = 1;
+  int **  LINES = calloc(sum_lines, sizeof(int*)); 
+  for (int i = 0 ; i< sum_lines ; i++){
+    LINES[i] = (int *)malloc(2*sizeof(int));
+  }  
+  float *  XY_rote = calloc(3, sizeof(float));
+  float *  xyz = calloc(8, sizeof(float));
+  float *  result = calloc(8, sizeof(float));
+  float *  origin = calloc(8, sizeof(float));
+  XY_rote[0] = 10;
+  XY_rote[1] = 15;
+   XY_rote[2] = 5;
+  xyz[0] = 1;
+  xyz[1] = 1;
+  xyz[2] = 6;
+  xyz[3] = 1;
+  xyz[4] = 12;
+  xyz[5] = 213;
+  xyz[6] = 4;
+  xyz[7] = 1;
+  float perspective_point_posion_z = 100;
+  int flag_perspective = 0;
+  int sum_points = 2;
+
+  rotate(xyz, result, XY_rote, sum_points, flag_perspective, perspective_point_posion_z, LINES, sum_lines);
+  origin[0] = 4.547472;
+  origin[1] = 0.907709;
+  origin[2] = 4.061596;
+  origin[3] = 1.000000;
+  origin[4] = 150.126144;
+  origin[5] = -130.220795;
+  origin[6] = -77.676796;
+  origin[7] = 1.000000;
+  for(int i =0; i < 4*sum_points; i++){
+    ck_assert_float_eq_tol(result[i], origin[i], 0.000001);
+  }
+  free(XY_rote);
+  free(xyz);
+  free(result);
+  free(origin);
+  for (int i = 0 ; i< 1 ; i++){
+    free(LINES[i]);
+  }
+  free(LINES);
+
+#test S21_TEST_CASE_9
+   int sum_lines = 1;
+  float perspective_point_posion_z = 100;
+  int flag_perspective = 0;
+  int sum_points = 1;
+  int **  LINES = calloc(sum_lines, sizeof(int*)); 
+  for (int i = 0 ; i< sum_lines ; i++){
+    LINES[i] = (int *)malloc(2*sizeof(int));
+  }  
+  float *  XY_rote = calloc(3, sizeof(float));
+  float *  xyz = calloc(8, sizeof(float));
+  float *  result = calloc(8, sizeof(float));
+  float *  origin = calloc(8, sizeof(float));
+  XY_rote[0] = 4;
+  XY_rote[1] = 1;
+  XY_rote[2] = 0;
+  xyz[0] = 6;
+  xyz[1] = 5.5;
+  xyz[2] = 0;
+  xyz[3] = 1;
+
+
+  rotate(xyz, result, XY_rote, sum_points, flag_perspective, perspective_point_posion_z, LINES, sum_lines);
+origin[0] = -0.260737;
+origin[1] = -3.595040;
+origin[2] = 7.297788;
+origin[3] = 1.000000;
+
+  for(int i =0; i < 4*sum_points; i++){
+    ck_assert_float_eq_tol(result[i], origin[i], 0.000001);
+  }
+  free(XY_rote);
+  free(xyz);
+  free(result);
+  free(origin);
+  for (int i = 0 ; i< sum_lines ; i++){
+    free(LINES[i]);
+  }
+  free(LINES);
+
+
+#test S21_TEST_CASE_10
+   
+  float perspective_point_posion_z = 100;
+  int flag_perspective = 1;
+  int sum_points = 1;
+  int sum_lines = 0;
+  int **  LINES = calloc(sum_lines, sizeof(int*)); 
+  for (int i = 0 ; i< sum_lines ; i++){
+    LINES[i] = (int *)malloc(2*sizeof(int));
+  }  
+  float *  XY_rote = calloc(3, sizeof(float));
+  float *  xyz = calloc(8, sizeof(float));
+  float *  result = calloc(8, sizeof(float));
+  float *  origin = calloc(8, sizeof(float));
+  
+  XY_rote[0] = 0;
+  XY_rote[2] = 0;
+  XY_rote[1] = 100.13;
+  xyz[0] = 364.1;
+  xyz[1] = 0.4124;
+  xyz[2] = 1.2;
+  xyz[3] = 1;
+
+
+  rotate(xyz, result, XY_rote, sum_points, flag_perspective, perspective_point_posion_z, LINES, sum_lines);
+  origin[0] = 139.286240;
+  origin[1] = 0.171115;
+  origin[2] = 0.000000;
+  origin[3] = 1.000000;
+
+  for(int i =0; i < 4*sum_points; i++){
+    ck_assert_float_eq_tol(result[i], origin[i], 0.000001);
+  }
+  free(XY_rote);
+  free(xyz);
+  free(result);
+  free(origin);
+  for (int i = 0 ; i< sum_lines ; i++){
+    free(LINES[i]);
+  }
+  free(LINES);
+  
+#test S21_TEST_CASE_11
+
+float perspective_point_posion_z = 1;
+  int flag_perspective = 1;
+  int sum_points = 1;
+  int sum_lines = 1;
+  int **  LINES = calloc(sum_lines, sizeof(int*)); 
+  for (int i = 0 ; i< sum_lines ; i++){
+    LINES[i] = (int *)malloc(2*sizeof(int));
+  }  
+  LINES[0][0] = 1;
+  LINES[0][1] = 1;
+  float *  XY_rote = calloc(3, sizeof(float));
+  float *  xyz = calloc(8, sizeof(float));
+  float *  result = calloc(8, sizeof(float));
+  float *  origin = calloc(8, sizeof(float));
+  
+  XY_rote[0] = 1;
+  XY_rote[1] = 100.13;
+  XY_rote[2] = -0.12;
+  xyz[0] = 364.1;
+  xyz[1] = 20;
+  xyz[2] = 48;
+  xyz[3] = 1;
+
+
+  rotate(xyz, result, XY_rote, sum_points, flag_perspective, perspective_point_posion_z, LINES, sum_lines);
+  origin[0] = 2.450922;
+  origin[1] = 0.678281;
+  origin[2] = 0.000000;
+  origin[3] = 1.000000;
+
+  for(int i =0; i < 4*sum_points; i++){
+    ck_assert_float_eq_tol(result[i], origin[i], 0.000001);
+  }
+  free(XY_rote);
+  free(xyz);
+  free(result);
+  free(origin);
+  for (int i = 0 ; i< sum_lines ; i++){
+    free(LINES[i]);
+  }
+  free(LINES);
